@@ -1,0 +1,30 @@
+﻿@using Microsoft.AspNetCore.Components.Rendering
+
+<div>
+    @RenderSections()
+</div>
+
+@code {
+    private Dictionary<string, RenderFragment?> _sections = new Dictionary<string, RenderFragment?>();
+
+    public void SetContent(string sectionId, RenderFragment? content)
+    {
+        _sections[sectionId] = content;
+        StateHasChanged(); // Ensure the component re-renders with new content
+    }
+
+    private RenderFragment RenderSections()
+    {
+        return builder =>
+        {
+            foreach (var section in _sections)
+            {
+                if (section.Value != null)
+                {
+                    
+                    builder.AddContent(0, section.Value);
+                }
+            }
+        };
+    }
+}
