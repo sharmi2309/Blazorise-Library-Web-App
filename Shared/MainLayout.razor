@@ -1,22 +1,19 @@
-﻿@inherits LayoutComponentBase
-@using Sample_BlazorWeb.Pages
-
-
+﻿﻿@using Sample_BlazorWeb.Pages
+@inherits LayoutComponentBase
 <div class="page">
-    @if (isSidebarVisible)
-    {
+       
         <div class="sidebar">
             <NavMenu />
         </div> 
-     } 
+     
 
    
     <main>
         <CascadingValue Value="SectionOutlet">
             <div class="top-row px-4">
-                <button class="navbar-toggler" type="button" @onclick="ToggleSidebar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+               @*  <button class="navbar-toggler" type="button" @onclick="ToggleSidebar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="oi oi-list" aria-hidden="true"></span> Menu
-                </button>
+                </button> *@
                 <SectionOutlet @ref="SectionOutlet" />
                 <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
             </div>
@@ -32,18 +29,17 @@
 
 @code {
     private SectionOutlet? SectionOutlet { get; set; }
-    private bool isSidebarVisible = false; // Variable to track sidebar visibility
+    // private bool isSidebarVisible = false; // Variable to track sidebar visibility
 
-    // Method to toggle the sidebar visibility
-    private void ToggleSidebar()
-    {
-        isSidebarVisible = !isSidebarVisible;
-    }
-    // private string sidebarStyle = "display: block;";  // Default sidebar visible
-
-    // private void HandleNavMenuToggle(bool isCollapsed)
+    // // Method to toggle the sidebar visibility
+    // private void ToggleSidebar()
     // {
-    //     sidebarStyle = isCollapsed ? "display: none;" : "display: block;";
+    //     isSidebarVisible = !isSidebarVisible;
     // }
+    // // private string sidebarStyle = "display: block;";  // Default sidebar visible
+
+    // // private void HandleNavMenuToggle(bool isCollapsed)
+    // // {
+    // //     sidebarStyle = isCollapsed ? "display: none;" : "display: block;";
+    // // }
 }
- 

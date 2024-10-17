@@ -9,63 +9,71 @@
     <EditForm Model="@newTodo" OnValidSubmit="AddTodo">
         <DataAnnotationsValidator />
 
-        <div class="mb-3">
+        <Div>
             <Label for="task" class="form-label">Title</Label>
             <InputText id="task" class="form-control" @bind-Value="@newTodo.Task" required />
             <ValidationMessage For="@(() => newTodo.Task)" />
-        </div>
+        </Div>
 
-        <div class="mb-3">
+        <Div>
             <Label for="description" class="form-label">Description</Label>
             <InputTextArea id="description" class="form-control" @bind-Value="@newTodo.Description" required />
             <ValidationMessage For="@(() => newTodo.Description)" />
-        </div>
+        </Div>
 
-        <div class="mb-3">
+        <Div>
             <Label for="dueDate" class="form-label">Due Date</Label>
             <InputDate id="dueDate" class="form-control" @bind-Value="@newTodo.DueDate" required />
             <ValidationMessage For="@(() => newTodo.DueDate)" />
-        </div>
+        </Div>
 
-        <div class="mb-3 text-center">
+        <Div Style="align-items:center">
             <Button Color="Color.Primary" Type="ButtonType.Submit">Add Task</Button>
-        </div>
+        </Div>
     </EditForm>
 
     <Modal @bind-Visible="@showEditModal" Size="ModalSize.Large">
         <ModalContent class="modal-centered">
             <ModalHeader>
-            <ModalTitle>Edit Task</ModalTitle>
+                <ModalTitle>Edit Task</ModalTitle>
             </ModalHeader>
-            
+
             <EditForm Model="@selectedTodo" OnValidSubmit="UpdateTodo">
                 <DataAnnotationsValidator />
                 <ModalBody>
-                
-                    <Label for="editTask" class="form-label">Title</Label>
-                    <InputText id="editTask" class="form-control" @bind-Value="@selectedTodo.Task" required />
-                    <ValidationMessage For="@(() => selectedTodo.Task)" />
-                
+                    <Div>
+                        <Label for="editTask" class="form-label">Title</Label>
+                        <InputText id="editTask" class="form-control" @bind-Value="@selectedTodo.Task" required />
+                        <ValidationMessage For="@(() => selectedTodo.Task)" />
+                    </Div>
+                    <Div>
 
-               
-                    <Label for="editDescription" class="form-label">Description</Label>
-                    <InputTextArea id="editDescription" class="form-control" @bind-Value="@selectedTodo.Description" required />
-                    <ValidationMessage For="@(() => selectedTodo.Description)" />
-            
+                        <Label for="editDescription" class="form-label">Description</Label>
+                        <InputTextArea id="editDescription" class="form-control" @bind-Value="@selectedTodo.Description" required />
+                        <ValidationMessage For="@(() => selectedTodo.Description)" />
+                    </Div>
+                    <Div>
 
-            
-                    <Label for="editDueDate" class="form-label">Due Date</Label>
-                    <InputDate id="editDueDate" class="form-control" @bind-Value="@selectedTodo.DueDate" required />
-                    <ValidationMessage For="@(() => selectedTodo.DueDate)" />
-               
+
+                        <Label for="editDueDate" class="form-label">Due Date</Label>
+                        <InputDate id="editDueDate" class="form-control" @bind-Value="@selectedTodo.DueDate" required />
+                        <ValidationMessage For="@(() => selectedTodo.DueDate)" />
+                    </Div>
+                    <Div>
+                        <Label for="filePicker" class="form-label">Upload File</Label>
+                        <FilePicker Multiple Upload="@(e => OnFileUpload(e, selectedTodo))"
+                                    ShowMode="FilePickerShowMode.List" />
+
+                    </Div>
+
                 </ModalBody>
-                <ModalFooter>
 
-                
+                <Div Style="align-items:center">
                     <Button Color="Color.Primary" Type="ButtonType.Submit">Update Task</Button>
-               
-                </ModalFooter>
+                </Div>
+
             </EditForm>
+
         </ModalContent>
     </Modal>
 
@@ -104,18 +112,22 @@
                     @foreach (var todo in todos)
                     {
                         <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
+                            <Div>
                                 <strong>@todo.Task</strong><br />
                                 <span>@todo.Description</span><br />
                                 @if (todo.DueDate.HasValue)
                                 {
                                     <span class="badge bg-secondary">@todo.DueDate.Value.ToShortDateString()</span>
+                                }<br />
+                                @if (!string.IsNullOrEmpty(todo.UploadedFiles))
+                                {
+                                    <span class="badge bg-info">@todo.UploadedFiles</span>
                                 }
-                            </div>
-                            <div>
+                            </Div>
+                            <Div>
                                 <Button Color="Color.Primary" Size="Size.Small" @onclick="@(() => OpenEditModal(todo))">Edit</Button>
                                 <Button Color="Color.Danger" Size="Size.Small" @onclick="@(() => RemoveTodo(todo))">Delete</Button>
-                            </div>
+                            </Div>
                         </li>
                     }
                 }
@@ -137,7 +149,7 @@
 @code {
     public class TodoItem
     {
-        public int Id { get; set; } 
+        public int Id { get; set; }
 
         [Required(ErrorMessage = "Task title is required.")]
         public string? Task { get; set; }
@@ -147,7 +159,10 @@
 
         [Required(ErrorMessage = "Due date is required.")]
         public DateTime? DueDate { get; set; }
+        public string? UploadedFiles { get; set; }
+
     }
+
 
     private List<TodoItem> todos = new List<TodoItem>();
     private TodoItem newTodo = new TodoItem();
@@ -156,13 +171,15 @@
     private bool showFailureModal = false;
     private bool showEditModal = false;
 
+
+
     public void AddTodo()
     {
         try
         {
             if (!string.IsNullOrWhiteSpace(newTodo.Task))
             {
-                
+
                 newTodo.Id = todos.Count > 0 ? todos.Max(t => t.Id) + 1 : 1;
 
                 var success = ProcessTaskAddition(newTodo);
@@ -193,7 +210,7 @@
     {
         selectedTodo = new TodoItem
             {
-                Id = todo.Id, 
+                Id = todo.Id,
                 Task = todo.Task,
                 Description = todo.Description,
                 DueDate = todo.DueDate
@@ -203,12 +220,13 @@
 
     public void UpdateTodo()
     {
-        var index = todos.FindIndex(t => t.Id == selectedTodo.Id); 
+        var index = todos.FindIndex(t => t.Id == selectedTodo.Id);
         if (index >= 0)
         {
             todos[index].Task = selectedTodo.Task;
             todos[index].Description = selectedTodo.Description;
             todos[index].DueDate = selectedTodo.DueDate;
+            todos[index].UploadedFiles = selectedTodo.UploadedFiles;
 
             showEditModal = false;
             ShowSuccessModal();
@@ -232,183 +250,27 @@
 
     private bool ProcessTaskAddition(TodoItem todoItem)
     {
-       
+
         return true;
     }
-}
-
-
-@* @page "/form"
-@using System.Collections.Generic
-@using System.ComponentModel.DataAnnotations
-@using Blazorise
-
-<div class="container mt-5">
-    <h2 class="text-center">Create Todo Task</h2>
-    
-    <EditForm Model="@newTodo" OnValidSubmit="AddTodo">
-        <DataAnnotationsValidator />
-        
-        <div class="mb-3">
-            <Label for="task" class="form-label">Title</Label>
-            <InputText id="task" class="form-control" @bind-Value="@newTodo.Task" required />
-            <ValidationMessage For="@(() => newTodo.Task)" />
-        </div>
-        
-        <div class="mb-3">
-            <Label for="description" class="form-label">Description</Label>
-            <InputTextArea id="description" class="form-control" @bind-Value="@newTodo.Description" required />
-            <ValidationMessage For="@(() => newTodo.Description)" />
-        </div>
-
-        <div class="mb-3">
-            <Label for="dueDate" class="form-label">Due Date</Label>
-            <InputDate id="dueDate" class="form-control" @bind-Value="@newTodo.DueDate" required />
-            <ValidationMessage For="@(() => newTodo.DueDate)" />
-        </div>
-
-        <div class="mb-3 text-center">
-            <Button Color="Color.Primary" Type="ButtonType.Submit">Add Task</Button>
-        </div>
-    </EditForm>
-    <Modal @bind-Visible="@showSuccessModal" Size="ModalSize.Large">
-        <ModalContent class="text-center modal-centered">
-            <div>
-                <i class="fa fa-check-circle text-success" style="font-size: 60px;"></i>
-                <h2>Great!</h2>
-                <p>Your task has been added successfully.</p>
-                <Button Color="Color.Success" @onclick="CloseSuccessModal">Back</Button>
-            </div>
-        </ModalContent>
-    </Modal>
-  
-    <Modal @bind-Visible="@showFailureModal" Size="ModalSize.Large">
-        <ModalContent class="text-center modal-centered">
-            <div>
-                <i class="fa fa-times-circle text-danger" style="font-size: 60px;"></i>
-                <h2>Oops!</h2>
-                <p>Failed to add your task. Please try again.</p>
-                <Button Color="Color.Danger" @onclick="CloseModal">Close</Button>
-            </div>
-        </ModalContent>
-    </Modal>
-
-
-    <h3 class="mt-4">Task List</h3>
-    <div class="card">
-        <div class="card-body">
-            <ul class="list-group">
-                @if (todos.Count == 0)
-                {
-                    <li class="list-group-item">No tasks available.</li>
-                }
-                else
-                {
-                    @foreach (var todo in todos)
-                    {
-                        <li class="list-group-item d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>@todo.Task</strong><br />
-                                <span>@todo.Description</span><br />
-                                @if (todo.DueDate.HasValue)
-                                {
-                                    <span class="badge bg-secondary">@todo.DueDate.Value.ToShortDateString()</span>
-                                }
-                            </div>
-                            <Button Color="Color.Danger" Size="Size.Small" @onclick="@(() => RemoveTodo(todo))">Delete</Button>
-                        </li>
-                    }
-                }
-            </ul>
-        </div>
-    </div>
-</div>
-<style>
-    .modal-centered {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        min-height:50vh;
-        flex-direction:column;
-    }
-</style>
-@code {
-    private List<TodoItem> todos = new List<TodoItem>();
-    private TodoItem newTodo = new TodoItem();
-    private bool showSuccessModal = false;
-    private bool showFailureModal = false;
-
-    public void AddTodo()
+    async Task OnFileUpload(FileUploadEventArgs e, TodoItem todo)
     {
         try
         {
-            if (!string.IsNullOrWhiteSpace(newTodo.Task))
+            using (MemoryStream result = new MemoryStream())
             {
-              
-                var success = ProcessTaskAddition(newTodo); 
-
-                if (success)
-                {
-                    todos.Add(new TodoItem { Task = newTodo.Task, Description = newTodo.Description, DueDate = newTodo.DueDate });
-                    newTodo = new TodoItem();
-                    ShowSuccessModal(); 
-                }
-                else
-                {
-                    ShowFailureModal(); 
-                }
-            }
-            else
-            {
-                ShowFailureModal(); 
+                await e.File.OpenReadStream(long.MaxValue).CopyToAsync(result);
+                todo.UploadedFiles = e.File.Name;
             }
         }
-        catch (Exception)
+        catch (Exception exc)
         {
-            ShowFailureModal(); 
+            Console.WriteLine(exc.Message);
+        }
+        finally
+        {
+            this.StateHasChanged();
         }
     }
-    private bool ProcessTaskAddition(TodoItem todo)
-    {
-       
-        Random rnd = new Random();
-        return rnd.Next(0, 2) == 1;
-    }
 
-    private void ShowSuccessModal()
-    {
-        showSuccessModal = true;
-    }
-    private void ShowFailureModal()
-    {
-        showFailureModal = true;
-    }
-
-    private void CloseSuccessModal()
-    {
-        showSuccessModal = false;
-       
-    }
-    private void CloseModal()
-    {
-        showSuccessModal = false;
-        showFailureModal = false;
-    }
-    private void RemoveTodo(TodoItem todo)
-    {
-        todos.Remove(todo);
-    }
-
-    public class TodoItem
-    {
-        [Required(ErrorMessage = "Task title is required.")]
-        public string? Task { get; set; }
-
-        [Required(ErrorMessage = "Description is required.")]
-        public string? Description { get; set; }
-
-        [Required(ErrorMessage = "Due date is required.")]
-        public DateTime? DueDate { get; set; }
-    }
 }
- *@

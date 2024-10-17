@@ -1,0 +1,84 @@
+﻿@page "/login"
+@using Blazorise
+@layout LoginLayout
+@using System.ComponentModel.DataAnnotations
+@using System.Collections.Generic
+<Steps SelectedStep="@selectedStep" SelectedStepChanged="@OnSelectedStepChanged">
+    <Items>
+        <Step Name="step1">Enter Credentials</Step>
+        <Step Name="step2">Review Details</Step>
+        <Step Name="step3">Finish</Step>
+    </Items>
+    <Content>
+        <StepPanel Name="step1">
+            <h3>Login</h3>
+            <EditForm Model="@loginModel" OnValidSubmit="@HandleValidSubmit">
+                <DataAnnotationsValidator />
+                
+                <Div>
+                    <Label for="username" class="form-label">Username:</Label>
+                    <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+                </Div>
+                <Div>
+                    <Label for="password" class="form-label">Password:</Label>
+                    <InputText id="password" class="form-control" @bind-Value="loginModel.Password" type="password" />
+                </Div>
+                
+                <button type="submit">Next</button>
+            </EditForm>
+        </StepPanel>
+        
+        <StepPanel Name="step2">
+            <h3>Review Details</h3>
+            <p><strong>Username:</strong> @loginModel.Username</p>
+            <p><strong>Password:</strong> @loginModel.Password (hidden for security)</p>
+            <button @onclick="GoBackToStep1">Back</button>
+            <button @onclick="FinishLogin">Finish</button>
+        </StepPanel>
+        
+        <StepPanel Name="step3">
+            <h3>Login Successful!</h3>
+            <p>You have successfully logged in.</p>
+            <p>Welcome, @loginModel.Username!</p>
+        </StepPanel>
+    </Content>
+</Steps>
+
+@code {
+    private string selectedStep = "step1";
+    [Inject] 
+    private NavigationManager NavigationManager { get; set; }
+
+    private LoginModel loginModel = new LoginModel();
+
+    private Task OnSelectedStepChanged(string name)
+    {
+        selectedStep = name;
+        return Task.CompletedTask;
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        selectedStep = "step2";
+    }
+
+    private Task GoBackToStep1()
+    {
+        selectedStep = "step1";
+        return Task.CompletedTask;
+    }
+
+    private async Task FinishLogin()
+    {
+        
+        selectedStep = "step3";
+        await Task.Delay(2000); 
+        NavigationManager.NavigateTo("/form");
+    }
+
+    public class LoginModel
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
+    }
+}
