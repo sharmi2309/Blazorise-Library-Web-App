@@ -1,21 +1,12 @@
-﻿﻿@using Sample_BlazorWeb.Pages
+﻿@using Sample_BlazorWeb.Pages
 @inherits LayoutComponentBase
-<div class="page">
-       
-        <div class="sidebar">
-            <NavMenu />
-        </div> 
-     
-
-   
+<Div >
     <main>
         <CascadingValue Value="SectionOutlet">
             <div class="top-row px-4">
-               @*  <button class="navbar-toggler" type="button" @onclick="ToggleSidebar" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-                    <span class="oi oi-list" aria-hidden="true"></span> Menu
-                </button> *@
                 <SectionOutlet @ref="SectionOutlet" />
-                <a href="https://docs.microsoft.com/aspnet/" target="_blank">About</a>
+                <a href="https://docs.microsoft.com/aspnet/" target="_blank" >About</a>&nbsp;&nbsp;
+                <Button Color="Color.Primary" Clicked="@ShowOffcanvas">Menu</Button>
             </div>
 
             <article class="content px-4">
@@ -23,23 +14,59 @@
             </article>
         </CascadingValue>
     </main>
- </div>
 
-
+    <Offcanvas @ref="offcanvasRef" ShowBackdrop Closing="@OnOffcanvasClosing" style="width:250px;Placement:Placement.Left">
+        <OffcanvasHeader style="background-color: #343a40; color: white;">
+            <span style="font-weight: bold; font-size: 1.25rem;">APPLICATION</span>
+            <CloseButton Clicked="@HideOffcanvas" style="color: white;" />
+        </OffcanvasHeader>
+        <OffcanvasBody style="background-color: #343a40;color: white;">
+            <Div style="height: 100%;width:250px; display: flex; flex-direction: column; justify-content: space-between;">
+               
+                <nav class="flex-column" >
+                    <Div style="margin-bottom: 20px">
+                        <NavLink class="nav-link" href="" Match="NavLinkMatch.All" @onclick="HideOffcanvas">
+                            <span class="oi oi-home" aria-hidden="true" style="font-weight: bold; font-size: 1rem;"></span> Home
+                        </NavLink>
+                    </Div>
+                    <Div style="margin-bottom: 20px">
+                        <NavLink class="nav-link" href="counter" @onclick="HideOffcanvas">
+                            <span class="oi oi-list-rich" aria-hidden="true" style="font-weight: bold; font-size: 1rem;"></span> Counter
+                        </NavLink>
+                    </Div>
+                    <Div style="margin-bottom: 20px">
+                        <NavLink class="nav-link" href="login" @onclick="HideOffcanvas" >
+                            <span class="oi oi-plus" aria-hidden="true" style="font-weight: bold; font-size: 1rem;"></span> Form
+                        </NavLink>
+                    </Div>
+                 </nav>
+            
+            </Div>
+        </OffcanvasBody>
+    </Offcanvas>
+</Div>
 
 @code {
     private SectionOutlet? SectionOutlet { get; set; }
-    // private bool isSidebarVisible = false; // Variable to track sidebar visibility
 
-    // // Method to toggle the sidebar visibility
-    // private void ToggleSidebar()
-    // {
-    //     isSidebarVisible = !isSidebarVisible;
-    // }
-    // // private string sidebarStyle = "display: block;";  // Default sidebar visible
+    private Offcanvas offcanvasRef;
 
-    // // private void HandleNavMenuToggle(bool isCollapsed)
-    // // {
-    // //     sidebarStyle = isCollapsed ? "display: none;" : "display: block;";
-    // // }
+    private bool cancelClose;
+
+    private Task ShowOffcanvas()
+    {
+        return offcanvasRef.Show();
+    }
+
+    private Task HideOffcanvas()
+    {
+        cancelClose = false;
+        return offcanvasRef.Hide();
+    }
+
+    private Task OnOffcanvasClosing(OffcanvasClosingEventArgs e)
+    {
+        e.Cancel = cancelClose || e.CloseReason != CloseReason.UserClosing;
+        return Task.CompletedTask;
+    }
 }

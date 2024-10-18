@@ -2,64 +2,79 @@
 @using Blazorise
 @layout LoginLayout
 @using System.ComponentModel.DataAnnotations
-@using System.Collections.Generic
-<Steps SelectedStep="@selectedStep" SelectedStepChanged="@OnSelectedStepChanged">
-    <Items>
-        <Step Name="step1">Enter Credentials</Step>
-        <Step Name="step2">Review Details</Step>
-        <Step Name="step3">Finish</Step>
-    </Items>
-    <Content>
-        <StepPanel Name="step1">
-            <h3>Login</h3>
-            <EditForm Model="@loginModel" OnValidSubmit="@HandleValidSubmit">
-                <DataAnnotationsValidator />
-                
-                <Div>
-                    <Label for="username" class="form-label">Username:</Label>
-                    <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
-                </Div>
-                <Div>
-                    <Label for="password" class="form-label">Password:</Label>
-                    <InputText id="password" class="form-control" @bind-Value="loginModel.Password" type="password" />
-                </Div>
-                
-                <button type="submit">Next</button>
-            </EditForm>
-        </StepPanel>
-        
-        <StepPanel Name="step2">
-            <h3>Review Details</h3>
-            <p><strong>Username:</strong> @loginModel.Username</p>
-            <p><strong>Password:</strong> @loginModel.Password (hidden for security)</p>
-            <button @onclick="GoBackToStep1">Back</button>
-            <button @onclick="FinishLogin">Finish</button>
-        </StepPanel>
-        
-        <StepPanel Name="step3">
-            <h3>Login Successful!</h3>
-            <p>You have successfully logged in.</p>
-            <p>Welcome, @loginModel.Username!</p>
-        </StepPanel>
-    </Content>
-</Steps>
+@using Sample_BlazorWeb.Model
+@using FluentValidation
+@using Microsoft.AspNetCore.Components.Forms
+@inject IValidator<LoginModel> loginModelValidator
+
+<div class="container mt-5">
+    <Steps SelectedStep="@selectedStep" SelectedStepChanged="@OnSelectedStepChanged">
+        <Items>
+            <Step Name="step1">Enter Credentials</Step>
+            <Step Name="step2">Review Details</Step>
+            <Step Name="step3">Finish</Step>
+        </Items>
+        <Content>
+            <StepPanel Name="step1">
+                <h3>Login</h3>
+                <EditForm EditContext="@editContext" OnValidSubmit="@HandleValidSubmit">
+                    <DataAnnotationsValidator />
+                   
+                    
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username:</label>
+                        <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
+                        <ValidationMessage For="@(() => loginModel.Username)" />
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password:</label>
+                        <InputText id="password" class="form-control" @bind-Value="loginModel.Password" type="password" />
+                        <ValidationMessage For="@(() => loginModel.Password)" />
+                    </div>
+                    <div style="display:flex;justify-content:center;align-items:center;">
+                        <Button Color="Color.Primary" Type="ButtonType.Submit">Next</Button>
+                    </div>
+                </EditForm>
+            </StepPanel>
+
+            <StepPanel Name="step2">
+                <h3><strong>Review Details</strong></h3>
+                <p style="font-weight:bold;font-size:1rem">Username: @loginModel.Username</p>
+                <div>
+                    <Button Color="Color.Secondary" Clicked="GoBackToStep1">Back</Button>&nbsp;&nbsp;
+                    <Button Color="Color.Primary" Clicked="FinishLogin">Finish</Button>
+                </div>
+            </StepPanel>
+
+            <StepPanel Name="step3">
+                <h3>Login Successful!</h3>
+                <p><strong>You have successfully logged in</strong></p>
+                <p><strong>Welcome, @loginModel.Username!</strong></p>
+            </StepPanel>
+        </Content>
+    </Steps>
+</div>
 
 @code {
     private string selectedStep = "step1";
-    [Inject] 
+    private LoginModel loginModel = new LoginModel();
+    private EditContext editContext;
+    private ValidationMessageStore validationMessageStore;
+
+    [Inject]
     private NavigationManager NavigationManager { get; set; }
 
-    private LoginModel loginModel = new LoginModel();
+    protected override void OnInitialized()
+    {
+        editContext = new EditContext(loginModel);
+        validationMessageStore = new ValidationMessageStore(editContext);
+        editContext.OnValidationRequested += (sender, eventArgs) => ValidateModel();
+    }
 
     private Task OnSelectedStepChanged(string name)
     {
         selectedStep = name;
         return Task.CompletedTask;
-    }
-
-    private async Task HandleValidSubmit()
-    {
-        selectedStep = "step2";
     }
 
     private Task GoBackToStep1()
@@ -70,15 +85,39 @@
 
     private async Task FinishLogin()
     {
-        
         selectedStep = "step3";
-        await Task.Delay(2000); 
+        await Task.Delay(2000);
         NavigationManager.NavigateTo("/form");
     }
 
-    public class LoginModel
+    private void ValidateModel()
     {
-        public string Username { get; set; }
-        public string Password { get; set; }
+        validationMessageStore.Clear();
+        var validationResult = loginModelValidator.Validate(loginModel);
+        if (!validationResult.IsValid)
+        {
+            foreach (var error in validationResult.Errors)
+            {
+                validationMessageStore.Add(editContext.Field(error.PropertyName), error.ErrorMessage);
+            }
+        }
+    }
+
+    private async Task HandleValidSubmit()
+    {
+        var validationResult = await loginModelValidator.ValidateAsync(loginModel);
+
+        if (validationResult.IsValid)
+        {
+            selectedStep = "step2";
+            Console.WriteLine("Login successful!");
+        }
+        else
+        {
+            foreach (var error in validationResult.Errors)
+            {
+                validationMessageStore.Add(editContext.Field(error.PropertyName), error.ErrorMessage);
+            }
+        }
     }
 }
