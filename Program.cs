@@ -6,6 +6,7 @@ using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
 using FluentValidation;
 using Sample_BlazorWeb.Validation;
+using Blazorise.FluentValidation;
 
 
 
@@ -21,6 +22,9 @@ builder.Services
         options.Immediate = true;
     })
     .AddBootstrap5Providers()
+    .AddBlazoriseFluentValidation()
     .AddFontAwesomeIcons();
+
+ 
 builder.Services.AddValidatorsFromAssemblyContaining<LoginModelValidator>();
 await builder.Build().RunAsync();

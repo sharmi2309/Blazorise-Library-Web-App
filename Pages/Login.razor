@@ -4,7 +4,7 @@
 @using System.ComponentModel.DataAnnotations
 @using Sample_BlazorWeb.Model
 @using FluentValidation
-@using Microsoft.AspNetCore.Components.Forms
+@using Blazorise.FluentValidation
 @inject IValidator<LoginModel> loginModelValidator
 
 <div class="container mt-5">
@@ -17,33 +17,42 @@
         <Content>
             <StepPanel Name="step1">
                 <h3>Login</h3>
-                <EditForm EditContext="@editContext" OnValidSubmit="@HandleValidSubmit">
-                    <DataAnnotationsValidator />
-                   
-                    
-                    <div class="mb-3">
-                        <label for="username" class="form-label">Username:</label>
-                        <InputText id="username" class="form-control" @bind-Value="loginModel.Username" />
-                        <ValidationMessage For="@(() => loginModel.Username)" />
-                    </div>
-                    <div class="mb-3">
-                        <label for="password" class="form-label">Password:</label>
-                        <InputText id="password" class="form-control" @bind-Value="loginModel.Password" type="password" />
-                        <ValidationMessage For="@(() => loginModel.Password)" />
-                    </div>
-                    <div style="display:flex;justify-content:center;align-items:center;">
-                        <Button Color="Color.Primary" Type="ButtonType.Submit">Next</Button>
-                    </div>
-                </EditForm>
+                <Validations @ref="fluentValidations" Mode="ValidationMode.Manual" Model="@loginModel" HandlerType="typeof(FluentValidationHandler)">
+                    <Validation>
+                        <Field>
+                            <Label for="username" class="form-label">Username:</Label>
+                            <TextEdit id="username" class="form-control" @bind-Text="loginModel.Username">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+                    <Validation>
+                        <Field>
+                            <Label for="password" class="form-label">Password:</Label>
+                            <TextEdit id="password" class="form-control" @bind-Text="loginModel.Password" TextMode="TextMode.Password">
+                                <Feedback>
+                                    <ValidationError />
+                                </Feedback>
+                            </TextEdit>
+                        </Field>
+                    </Validation>
+
+                    <Div style="display:flex;justify-content:center;align-items:center;">
+                        <Button Color="Color.Primary" Clicked="@HandleValidSubmit">Next</Button>
+                    </Div>
+                </Validations>
             </StepPanel>
 
             <StepPanel Name="step2">
                 <h3><strong>Review Details</strong></h3>
                 <p style="font-weight:bold;font-size:1rem">Username: @loginModel.Username</p>
-                <div>
+                <Div>
                     <Button Color="Color.Secondary" Clicked="GoBackToStep1">Back</Button>&nbsp;&nbsp;
                     <Button Color="Color.Primary" Clicked="FinishLogin">Finish</Button>
-                </div>
+                </Div>
             </StepPanel>
 
             <StepPanel Name="step3">
@@ -57,19 +66,11 @@
 
 @code {
     private string selectedStep = "step1";
+    private Validations fluentValidations;
     private LoginModel loginModel = new LoginModel();
-    private EditContext editContext;
-    private ValidationMessageStore validationMessageStore;
 
     [Inject]
     private NavigationManager NavigationManager { get; set; }
-
-    protected override void OnInitialized()
-    {
-        editContext = new EditContext(loginModel);
-        validationMessageStore = new ValidationMessageStore(editContext);
-        editContext.OnValidationRequested += (sender, eventArgs) => ValidateModel();
-    }
 
     private Task OnSelectedStepChanged(string name)
     {
@@ -90,34 +91,18 @@
         NavigationManager.NavigateTo("/form");
     }
 
-    private void ValidateModel()
-    {
-        validationMessageStore.Clear();
-        var validationResult = loginModelValidator.Validate(loginModel);
-        if (!validationResult.IsValid)
-        {
-            foreach (var error in validationResult.Errors)
-            {
-                validationMessageStore.Add(editContext.Field(error.PropertyName), error.ErrorMessage);
-            }
-        }
-    }
-
     private async Task HandleValidSubmit()
     {
-        var validationResult = await loginModelValidator.ValidateAsync(loginModel);
+        var isValid = await fluentValidations.ValidateAll();
 
-        if (validationResult.IsValid)
+        if (isValid)
         {
             selectedStep = "step2";
             Console.WriteLine("Login successful!");
         }
         else
         {
-            foreach (var error in validationResult.Errors)
-            {
-                validationMessageStore.Add(editContext.Field(error.PropertyName), error.ErrorMessage);
-            }
+            Console.WriteLine("Validation failed.");
         }
     }
 }
